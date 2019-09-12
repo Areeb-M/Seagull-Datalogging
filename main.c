@@ -31,7 +31,7 @@
 /*
  * Support and FAQ: visit <a href="https://www.microchip.com/support/">Microchip Support</a>
  */
-#include main.h>
+#include <main.h>
 
 
 int main (void)
