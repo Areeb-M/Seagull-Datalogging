@@ -31,7 +31,7 @@
 /*
  * Support and FAQ: visit <a href="https://www.microchip.com/support/">Microchip Support</a>
  */
-#include <seagull_definitions.h>
+#include main.h>
 
 
 int main (void)
