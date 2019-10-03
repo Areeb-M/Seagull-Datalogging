@@ -13,6 +13,8 @@
 #define __DELAY_BACKWARD_COMPATIBLE__	// Necessary definition for _delay_ms and _delay_us from delay.h to accept variables as arguments
 #include <util/delay.h>
 #include <bmp280/bmp280_definitions.h>
+#include <GPS/gps.h>
+#include <sio2host.h>
 
 /*		Functions		*/
 int main(void);
