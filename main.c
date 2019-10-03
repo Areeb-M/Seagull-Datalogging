@@ -31,25 +31,55 @@
 /*
  * Support and FAQ: visit <a href="https://www.microchip.com/support/">Microchip Support</a>
  */
-#include <seagull_definitions.h>
-
+#include <main.h>
 
 int main (void)
 {
 	board_init();
-	ioport_set_pin_level(LED_0_PIN, !LED_0_ACTIVE); // disable LED
+	//sysclk_init();
+	
+	ioport_set_pin_level(LED_0_PIN,  !LED_0_ACTIVE); // disable LED
 	
 	int status = initialize_bmp280();
 	error_check(status);
 	
-	int temperature, pressure;
+	int temperature;
+	double pressure;
+	
+	status = initialize_gps();
+	error_check(status);
+	
+	set_nmea_output();
+	char read;
+	int address = 0;
+	char input[1500];
+	while(1)
+	{
+		read = usart_getchar(USART_SERIAL);
+		if(read == '$')
+		{
+			ioport_set_pin_level(LED_0_PIN, LED_0_ACTIVE);
+		} else
+		{
+			ioport_set_pin_level(LED_0_PIN, !LED_0_ACTIVE);
+		}
+		while(!eeprom_is_ready()){}
+		if(address < 1500)
+		eeprom_write_byte(address++, read);	// Store status in EEPROM
+		
+	}
+	for(int i = 0; i < 32; i++)
+	{
+		while(!eeprom_is_ready()){}
+		eeprom_write_byte(i, input[i]);	// Store status in EEPROM
+	}
 	while (1)
 	{
 		status = bmp280_poll_sensor();	
 		error_check(status);
 		
 		temperature = bmp280_read_temperature();
-		pressure = bmp280_read_pressure_32bit();
+		pressure = bmp280_read_pressure_double();
 		
 		while(!eeprom_is_ready()){}
 		eeprom_write_word(12, temperature);	// Store status in EEPROM		
