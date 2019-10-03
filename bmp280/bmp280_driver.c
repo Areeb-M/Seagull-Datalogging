@@ -7,7 +7,6 @@
  */ 
 
 #include "bmp280_definitions.h"
-#include <twi/twi.h>
 
 struct bmp280_dev bmp;
 struct bmp280_config conf;
@@ -36,9 +35,16 @@ void delay_ms(uint32_t period_ms)
  */
 int initialize_bmp280(void)
 {
+	//twi_init(BMP280_I2C_ADDR_SEC, TWI_PORT, TWI_SPEED);
+	twi_master_options_t opt = {
+		.speed = TWI_SPEED,
+		.chip = BMP280_I2C_ADDR_SEC
+	};
+	twi_master_setup(&TWI_PORT, &opt);
+	
 	bmp.delay_ms = delay_ms;
-	bmp.dev_id = BMP280_DEV_ID;
-	bmp.intf = BMP280_INTERFACE;
+	bmp.dev_id = BMP280_I2C_ADDR_SEC;
+	bmp.intf = BMP280_I2C_INTF;
 	bmp.read = i2c_reg_read;
 	bmp.write = i2c_reg_write;
 	
@@ -68,6 +74,63 @@ int initialize_bmp280(void)
 	{return result-3000;} // -3000 means that it failed at setting the power mode
 	
 	return 0; // Initialization Complete!
+}
+
+/*!
+ *  @brief Function for writing the sensor's registers through I2C bus.
+ *
+ *  @param[in] i2c_addr : sensor I2C address.
+ *  @param[in] reg_addr : Register address.
+ *  @param[in] reg_data : Pointer to the data buffer whose value is to be written.
+ *  @param[in] length   : No of bytes to write.
+ *
+ *  @return Status of execution
+ *  @retval 0 -> Success
+ *  @retval >0 -> Failure Info
+ *
+ */
+int8_t i2c_reg_write(uint8_t i2c_addr, uint8_t reg_addr, uint8_t *reg_data, uint16_t length)
+{
+twi_package_t packet_write = {
+	.addr         = reg_addr,      // TWI slave memory address data
+	.addr_length  = sizeof (reg_addr),    // TWI slave memory address data size
+	.chip         = i2c_addr,      // TWI slave bus address
+	.buffer       = (void *)reg_data, // transfer data source buffer
+	.length       = length  // transfer data size (bytes)
+};
+while (twi_master_write(&TWI_PORT, &packet_write) != TWI_SUCCESS);
+    /* Implement the I2C write routine according to the target machine. */
+    return 0;
+}
+
+/*!
+ *  @brief Function for reading the sensor's registers through I2C bus.
+ *
+ *  @param[in] i2c_addr : Sensor I2C address.
+ *  @param[in] reg_addr : Register address.
+ *  @param[out] reg_data    : Pointer to the data buffer to store the read data.
+ *  @param[in] length   : No of bytes to read.
+ *
+ *  @return Status of execution
+ *  @retval 0 -> Success
+ *  @retval >0 -> Failure Info
+ *
+ */
+int8_t i2c_reg_read(uint8_t i2c_addr, uint8_t reg_addr, uint8_t *reg_data, uint16_t length)
+{
+twi_package_t packet_read = {
+	.addr         = reg_addr,      // TWI slave memory address data
+	.addr_length  = sizeof (reg_addr),    // TWI slave memory address data size
+	.chip         = i2c_addr,      // TWI slave bus address
+	.buffer       = reg_data,        // transfer data destination buffer
+	.length       = length                    // transfer data size (bytes)
+};
+// Perform a multi-byte read access then check the result.
+if(twi_master_read(&TWI_PORT, &packet_read) == TWI_SUCCESS){
+	//Check read content
+}
+    /* Implement the I2C read routine according to the target machine. */
+    return 0;
 }
 
 /*!
